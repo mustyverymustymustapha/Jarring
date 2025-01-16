@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Jarring (Count the Jar)!</title>
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Press Start 2P', cursive;
+            }
+
+            body {
+                min-height: 100vh;
+                background: linear-gradient(135deg, #2c3e50, #3498db);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                color: #fff;
+                padding: 20px;
+            }
+
+            .container {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                padding: 2rem;
+                border-radius: 15px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+                text-align: center;
+                max-width: 600px;
+                width: 100%;
+            }
+
+            .jar-container {
+                position: relative;
+                width: 300px;
+                height: 400px;
+                margin: 20px auto;
+            }
+
+            .jar-bg {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(
+                    to right,
+                    rgba(255, 255, 255, 0.2),
+                    rgba(255, 255, 255, 0.1)
+                    );
+                    border-radius: 40px 40px 30px 30px;
+                    border: 8px solid rgba(255, 255, 255, 0.3);
+                    overflow: hidden;
+            }
+
+            .jar-lid {
+                position: absolute;
+                top: -20px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 80%;
+                height: 30px;
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 10px;
+            }
+
+            .jar-contents {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                align-content: flex-end;
+                padding: 20px;
+                perspective: 1000px;
+            }
+
+            .item {
+                position: absolute;
+                font-size: 24px;
+                transform-style: preserve-3d;
+                transition: transform 0.3s;
+                animation: float 3s infinite ease-in-out;
+                animation-delay: var(--delay);
+                filter: blur(var(--blur));
+                opacity: var(--opacity);
+            }
+
+            @keyframes float {
+                0%, 100% { transform: translateY(0) translateZ(var(--z)); }
+                50% { transform: translateY(-5px) translateZ(var(--z)); }
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+                color: #f1c40f;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .guess-input {
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+                padding: 1rem;
+                font-size: 1rem;
+                color: #fff;
+                border-radius: 5px;
+                margin: 1rem 0;
+                width: 150px;
+                text-align: center;
+            }
+
+            .guess-btn {
+                background: #f1c40f;
+                border: none;
+                padding: 1rem 2rem;
+                font-size: 1rem;
+                color: #2c3e50;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: transform 0.3s, background 0.3s;
+            }
+
+            .guess-btn:hover {
+                transform: scale(1.05);
+                background: #f39c12;
+            }
+
+            .message {
+                margin: 1rem 0;
+                min-height: 3rem;
+                line-height: 1.5;
+            }
+
+            .stats {
+                display: flex;
+                justify-content: space-around;
+                margin-top: 2rem;
+                font-size: 0.8rem;
+            }
+
+            .stats div {
+                background: rgba(255, 255, 255, 0.1);
+                padding: 1rem;
+                border-radius: 5px;
+            }
+
+            .shake {
+                animation: shake 0.5s;
+            }
+
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px) rotate(-5deg); }
+                75% { transform: translateX(10px) rotate(5deg); }
+            }
+
+            .difficulty-selector {
+                margin: 1rem 0;
+                display: flex;
+                justify-content: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .difficulty-btn {
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+                padding: 0.5rem 1rem;
+                color: white;
+                cursor: pointer;
+                border-radius: 5px;
+                transition: all 0.3s;
+            }
+
+            .difficulty-btn.active {
+                background: #f1c40f;
+                color: #2c3e50;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Count the Objects in the Jar!</h1>
+            <div class="jar-container">
+                <div class="jar-lid"></div>
+                <div class="jar-bg">
+                    <div class="jar-contents"></div>
+                </div>
+            </div>
+            <div class="difficulty-selector">
+                <button class="difficulty-btn active" data-range="20">Easy</button>
+                <button class="difficulty-btn" data-range="40">Medium</button>
+                <button class="difficulty-btn" data-range="60">Hard</button>
+            </div>
+            <input type="number" class="guess-input" min="1" max="100" placeholder="How many?">
+            <button class="guess-btn">GUESS!</button>
+            <div class="message"></div>
+            <div class="stats">
+                <div>Attempts: <span class="attempts">0</span></div>
+                <div>Best Score: <span class="best-score"></span>-</div>
+            </div>
+        </div>
+
+        <script>
+            const objects = [
+                { name: "Marbles", emoji: "🔮" },
+                { name: "Candies", emoji: "🍬" },
+                { name: "Cookies", emoji: "🍪" },
+                { name: "Hearts", emoji: "❤️" },
+                { name: "Stars", emoji: "⭐️" },
+                { name: "Gems", emoji: "💎" }
+            ];
+
+            const jarContents = document.querySelector('.jar-contents');
+            const guessInput = document.querySelector('.guess-input');
+            const guessBtn = document.querySelector('.guess-btn');
+            const messageEl = document.querySelector('.message');
+            const attemptsEl = document.querySelector('.attempts');
+            const bestScoreEl = document.querySelector('.best-score');
+            const jarContainer = document.querySelector('.jar-container');
+            const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+
+            let targetNumber;
+            let attempts = 0;
+            let bestScore = localStorage.getItem('bestScore') || '-';
+            let currentObject;
+            let maxRange = 20;
+
+            bestScoreEl.textContent = bestScore;
+
+            function getRandomObject() {
+                return objects[Math.floor(Math.random() * objects.length)];
+            }
+
+            function createJarItems(number, emoji) {
+                jarContents.innerHTML = '';
+                for (let i = 0; i < number; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'item';
+                    item.textContent = emoji;
+
+                    const left = Math.random() * 80 + 10;
+                    const bottom = Math.random() * 70 + 10;
+                    const zIndex = Math.floor(Math.random() * number);
+                    const blur = Math.random() * 2;
+                    const opacity = 0.7 + Math.random() * 0.3;
+                    const z = Math.random() * 50;
+
+                    item.style.cssText = `
+                    left: ${left}%;
+                    bottom: ${bottom}%;
+                    z-index: ${zIndex};
+                    --blur: ${blur}px;
+                    --opacity: ${opacity};
+                    --z: ${z}px;
+                    --delay: ${Math.random() * 2}s;
+                    `;
+
+                    jarContents.appendChild(item);
+                }
+            }
+
+            function checkGuess() {
+                const guess = parseInt(guessInput.value);
+                attempts++;
+                attemptsEl.textContent = attempts;
+
+                if (isNan(guess) || guess < 1 || guess > maxRange) {
+                    messageEl.textContent = `Please enter a valid number between 1 and ${maxRange}!`;
+                    jarContainer.classList.add('shake');
+                    setTimeout(() => jarContainer.classList.remove('shake'), 500);
+                    return;
+                }
+                if (guess === targetNumber) {
+                    messageEl.textContent = `🎉 Correct! There were ${targetNumber} ${currentObject.name}!`;
+                    if (bestScore === '-' || attempts < bestScore) {
+                        bestScore = attempts;
+                        localStorage.setItem('bestScore', bestScore);
+                        bestScoreEl.textContent = bestScore;
+                    }
+                    guessBtn.textContent = "PLAY AGAIN";
+                    guessBtn.removeEventListener('click', checkGuess);
+                    guessBtn.addEventListener('click', resetGame);
+                } else {
+                    const difference = Math.abs(guess - targetNumber);
+                    let message = "Try again! ";
+
+                    if (difference > 10) message += "You're way off!";
+                    else if (different > 4) message += "Getting closer!";
+                    else message += "Very close!";
+
+                    messageEl.textContent = message;
+                    jarContainer.classList.add('shake');
+                    setTimeout(() => jarContainer.classList.remove('shake'), 500);
+                }
+
+            }
+
+          function setDifficulty(range) {
+            maxRange = range;
+            difficultyBtns.forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.range) === range);
+            });
+            guessInput.max = range;
+            resetGame();
+          }
+
+          function resetGame() {
+            currentObject = getRandomObject();
+            targetNumber = Math.floor(Math.random() * (maxRange - 5)) + 5;
+            attempts = 0;
+            attemptsEl.textContent = attempts;
+            messageEl.textContent = `How many ${currentObject.name} are in the jar?`;
+            guessInput.value = "";
+            guessBtn.textContent = "GUESS!";
+            createJarItems(targetNumber, currentObject.emoji);
+            guessBtn.removeEventListener('click', resetGame);
+            guessBtn.addEventListener('click', checkGuess);
+          }
+
+          guessBtn.addEventListener('click', checkGuess);
+          guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkGuess();
+          });
+
+          difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => setDifficulty(parseInt(btn.dataset.range)));
+          });
+
+          resetGame();
+
+        </script>
+
+    </body>
+</html>
