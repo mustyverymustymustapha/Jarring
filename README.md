@@ -1,3 +1,4 @@
+![IMG_0271](https://github.com/user-attachments/assets/c1a7b7ff-ddb7-4316-a343-bffff5b6044b)
 # 🏺 Jarring (Count the Jar!)
 
 ## 🎮 About the Game  
